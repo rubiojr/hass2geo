@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -81,6 +80,11 @@ func main() {
 						Required: false,
 					},
 					&cli.StringFlag{
+						Name:     "filter-by-country",
+						Usage:    "Only export locations in a given country ISO code",
+						Required: false,
+					},
+					&cli.StringFlag{
 						Name:     "sensor-id",
 						Usage:    "Sensor ID to export",
 						Required: true,
@@ -91,14 +95,7 @@ func main() {
 					if err != nil {
 						return err
 					}
-					switch cCtx.String("format") {
-					case "gpx":
-						return exportGPX(db, cCtx.String("sensor-id"))
-					case "geojson":
-						return exportGeoJSON(db, cCtx.String("sensor-id"))
-					default:
-						return errors.New("Unsupported format")
-					}
+					return export(db, cCtx.String("sensor-id"), cCtx.String("format"), cCtx.String("filter-by-country"))
 				},
 			},
 		},
@@ -107,17 +104,15 @@ func main() {
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}
-
 }
 
-func exportGeoJSON(db *sql.DB, sensor string) error {
-	fc := geojson.NewFeatureCollection()
-
+func export(db *sql.DB, sensor string, format string, filter string) error {
 	rows, err := db.Query("select states.last_updated_ts, state_attributes.shared_attrs from state_attributes inner join states on state_attributes.attributes_id=states.attributes_id where states.metadata_id = ? order by states.last_updated_ts asc;", sensor)
 	if err != nil {
 		return err
 	}
 	added := 0
+	var locations []*GeoInfo
 	for rows.Next() {
 		var s string
 		var ts float64
@@ -131,71 +126,65 @@ func exportGeoJSON(db *sql.DB, sensor string) error {
 		if err != nil {
 			return err
 		}
+		geo.Timestamp = &mt
+
+		if filter != "" && geo.ISOCountryCode != filter {
+			continue
+		}
+
 		if len(geo.Location) == 0 {
 			continue
 		}
+		locations = append(locations, geo)
+		added++
+	}
+
+	switch format {
+	case "gpx":
+		return exportGPX(locations)
+	case "geojson":
+		return exportGeoJSON(locations)
+	}
+	return fmt.Errorf("unsupported format: %s", format)
+}
+
+func exportGeoJSON(locations []*GeoInfo) error {
+	fc := geojson.NewFeatureCollection()
+
+	for _, geo := range locations {
 		slices.Reverse(geo.Location)
 		feat := geojson.NewPointFeature(geo.Location)
 		feat.SetProperty("Name", geo.Name)
 		feat.SetProperty("Country", geo.Country)
 		feat.SetProperty("ISO Country", geo.ISOCountryCode)
-		feat.SetProperty("Timestamp", ts)
-		feat.SetProperty("Date", mt.Format("2006-01-02 15:04:05"))
+		feat.SetProperty("Timestamp", geo.Timestamp.Unix())
+		feat.SetProperty("Date", geo.Timestamp.Format("2006-01-02 15:04:05"))
 		fc.AddFeature(feat)
-		added++
-	}
-
-	if added == 0 {
-		return errors.New("no points found")
 	}
 
 	rawJSON, err := fc.MarshalJSON()
 	if err != nil {
 		return err
 	}
+
 	fmt.Println(string(rawJSON))
 	return nil
 }
 
-func exportGPX(db *sql.DB, sensor string) error {
-	rows, err := db.Query("select states.last_updated_ts, state_attributes.shared_attrs from state_attributes inner join states on state_attributes.attributes_id=states.attributes_id where states.metadata_id = ? order by states.last_updated_ts asc;", sensor)
-	if err != nil {
-		return err
-	}
-
+func exportGPX(locations []*GeoInfo) error {
 	g := &gpx.GPX{
 		Version: "1.0",
 		Creator: "GPX Generator",
 		Wpt:     []*gpx.WptType{},
 	}
 
-	added := 0
-	for rows.Next() {
-		var s string
-		var ts float64
-		if err := rows.Scan(&ts, &s); err != nil {
-			return err
-		}
-		mt := time.Unix(int64(ts), 0)
-		geo, err := decodeRow(s)
-		if err != nil {
-			return err
-		}
-		if len(geo.Location) == 0 {
-			continue
-		}
-
+	for _, geo := range locations {
 		g.Wpt = append(g.Wpt, &gpx.WptType{
 			Lat:  geo.Location[0],
 			Lon:  geo.Location[1],
-			Time: mt,
+			Time: *geo.Timestamp,
 			Name: geo.Name,
 		})
-		added++
-	}
-
-	if added == 0 {
-		return errors.New("no points found")
 	}
 
 	fmt.Print(xml.Header)

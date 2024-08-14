@@ -1,6 +1,9 @@
 package main
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
 
 type Sensor struct {
 	Name       string
@@ -24,6 +27,7 @@ type GeoInfo struct {
 	ISOCountryCode        string          `json:"ISO Country Code"`
 	Name                  string          `json:"Name"`
 	Ocean                 string          `json:"Ocean"`
+	Timestamp             *time.Time      `json:"-"`
 }
 
 type AreasOfInterest struct {
