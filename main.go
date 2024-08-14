@@ -158,6 +158,7 @@ func exportGeoJSON(locations []*GeoInfo) error {
 		feat.SetProperty("Country", geo.Country)
 		feat.SetProperty("ISO Country", geo.ISOCountryCode)
 		feat.SetProperty("Timestamp", geo.Timestamp.Unix())
+		feat.SetProperty("Time", geo.Timestamp)
 		feat.SetProperty("Date", geo.Timestamp.Format("2006-01-02 15:04:05"))
 		fc.AddFeature(feat)
 	}
