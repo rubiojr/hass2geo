@@ -23,6 +23,10 @@ func initDb(cCtx *cli.Context) (*sql.DB, error) {
 		return nil, fmt.Errorf("database file is required.")
 	}
 
+	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
+		return nil, fmt.Errorf("database file does not exist.")
+	}
+
 	var err error
 	db, err := sql.Open("sqlite", fmt.Sprintf("file:%s?_pragma=query_only(1)&_pragma=foreign_keys(1)&_pragma=busy_timeout(5000)", dbPath))
 	return db, err
