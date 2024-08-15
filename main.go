@@ -30,8 +30,9 @@ func initDb(cCtx *cli.Context) (*sql.DB, error) {
 
 func main() {
 	app := &cli.App{
-		Name:  "hass2geo",
-		Usage: "make an explosive entrance",
+		Name:    "hass2geo",
+		Usage:   "make an explosive entrance",
+		Version: Version,
 		Action: func(*cli.Context) error {
 			return nil
 		},
