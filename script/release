@@ -1,0 +1,19 @@
+#!/bin/sh
+set -e
+
+if [ -z "$1" ]; then
+  echo "Missing version."
+  exit 1
+fi
+
+cat << EOF > version.go
+package main
+
+const Version = "$1"
+EOF
+
+go build
+git commit -am "Tagging $1"
+git push
+git tag "$1"
+git push --tags
