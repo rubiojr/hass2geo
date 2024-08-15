@@ -4,6 +4,8 @@ Exports geolocation data from your Home Assistant SQLite database.
 
 Home Assistant can track your device (phone, table, etc) location if you have location sharing enabled in your Home Assistant companion app. See [Home Assistant location documentation](https://companion.home-assistant.io/docs/core/location/).
 
+GeoJSON and GPX formats are supported.
+
 ## Usage
 
 You'll need direct access to Home Assistant's [SQLite database](https://www.home-assistant.io/docs/backend/database/). The database is typically located at `config/home-assistant_v2.db`.
@@ -28,3 +30,7 @@ You can then use the `export` subcommand to export the location data:
 ```
 hass2geo --db home-assistant_v2.db export --sensor-id 5236 --format geojson # exports `micro` location data
 ```
+
+## Related software
+
+- [Timelinize](https://github.com/timelinize/timelinize) - Can import geojson and gpx files exported with hass2eo and render a timeline.
