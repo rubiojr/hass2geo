@@ -3,4 +3,4 @@ set -e
 
 SENSOR=2071
 
-ssh -p2200 root@homeassistant "config/hass2geo --db /root/config/home-assistant_v2.db export --format geojson --sensor-id $SENSOR" | jq -r
+ssh -p2200 root@homeassistant "config/hass2geo --db /root/config/home-assistant_v2.db export --format geojson --sensor-id $SENSOR" | jq -r > ~/Documents/geojson/hass-sensor-`date +%F`.geojson
