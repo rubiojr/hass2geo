@@ -6,6 +6,10 @@ Home Assistant can track your device (phone, table, etc) location if you have lo
 
 GeoJSON and GPX formats are supported.
 
+## Installation
+
+Download the latest release from the [releases page](https://github.com/rubiojr/hass2geo/releases) and extract the binary to a directory in your PATH.
+
 ## Usage
 
 You'll need direct access to Home Assistant's [SQLite database](https://www.home-assistant.io/docs/backend/database/). The database is typically located at `config/home-assistant_v2.db`.
