@@ -8,7 +8,7 @@ GeoJSON and GPX formats are supported.
 
 ## Installation
 
-Download the latest release from the [releases page](https://github.com/rubiojr/hass2geo/releases) and extract the binary to a directory in your PATH.
+Download the latest release for your platform from the [releases page](https://github.com/rubiojr/hass2geo/releases) and extract the binary to a directory in your PATH.
 
 ## Usage
 
