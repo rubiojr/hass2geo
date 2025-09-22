@@ -12,7 +12,7 @@ package main
 const Version = "$1"
 EOF
 
-go build
+CGO_ENABLED=0 go build
 git commit -am "Tagging $1"
 git push
 git tag "$1"
