@@ -115,6 +115,32 @@ func main() {
 					)
 				},
 			},
+			{
+				Name:  "debug-schema",
+				Usage: "Print the SQLite database schema",
+				Action: func(cCtx *cli.Context) error {
+					db, err := initDb(cCtx)
+					if err != nil {
+						return err
+					}
+					rows, err := db.Query(`SELECT type, name, sql FROM sqlite_master WHERE type IN ('table','index','trigger','view') AND sql IS NOT NULL ORDER BY type, name;`)
+					if err != nil {
+						return err
+					}
+					defer rows.Close()
+					for rows.Next() {
+						var objType, name, sqlStmt string
+						if err := rows.Scan(&objType, &name, &sqlStmt); err != nil {
+							return err
+						}
+						fmt.Printf("-- %s: %s\n%s;\n\n", objType, name, sqlStmt)
+					}
+					if err := rows.Err(); err != nil {
+						return err
+					}
+					return nil
+				},
+			},
 		},
 	}
 
